@@ -28,7 +28,7 @@ erDiagram
     uuid id PK
     string email
     string password_hash
-    string role        // student | advisor | admin
+    string role        
     boolean email_verified
     datetime created_at
   }
@@ -42,9 +42,9 @@ erDiagram
   }
 
   PROGRAM {
-    string id PK       // e.g., BS-COMPE
+    string id PK       
     string name
-    string level       // BS/MS
+    string level       
     string catalog_year
   }
 
@@ -58,14 +58,14 @@ erDiagram
   PROGRAM_REQUIREMENT {
     string id PK
     string program_id FK
-    string stream_id FK   // nullable
-    string kind           // core | elective | capstone
+    string stream_id FK   
+    string kind           
     int min_units
-    json rule             // eligible courses, groups, logic
+    json rule             
   }
 
   COURSE {
-    string id PK          // e.g., COMPE-510
+    string id PK         
     string title
     int units
     string department
@@ -75,8 +75,8 @@ erDiagram
     string id PK
     string target_course_id FK
     string prereq_course_id FK
-    string type           // prereq | coreq
-    string group_tag      // AND/OR grouping
+    string type           
+    string group_tag      
     float min_grade
   }
 
@@ -90,8 +90,8 @@ erDiagram
   COURSE_OFFERING {
     string id PK
     string course_id FK
-    string term_code      // e.g., 2026-Fall
-    json meeting_times    // day/time/location
+    string term_code      
+    json meeting_times    
   }
 
   DEGREE_PLAN {
@@ -99,13 +99,13 @@ erDiagram
     uuid student_profile_id FK
     string program_id FK
     string catalog_year
-    json settings         // credit caps, preferences
+    json settings        
   }
 
   TERM {
     uuid id PK
     uuid plan_id FK
-    string term_code      // semester-based only
+    string term_code    
     int max_units
   }
 
@@ -113,8 +113,8 @@ erDiagram
     uuid id PK
     uuid term_id FK
     string course_id FK
-    string status         // planned | waitlist | registered
-    string source         // manual | recommended
+    string status         
+    string source       
   }
 
   COMPLETION {
@@ -124,15 +124,15 @@ erDiagram
     string term_code
     string grade
     int units_earned
-    string source         // import | manual
+    string source         
   }
 
   AUDIT_RESULT {
     uuid id PK
     uuid plan_id FK
     datetime run_at
-    json summary          // satisfied/remaining
-    json issues           // prereqs, overloads, gaps
+    json summary          
+    json issues          
   }
 
   SHARE_LINK {
@@ -140,16 +140,16 @@ erDiagram
     uuid plan_id FK
     string token
     datetime expires_at
-    string permission     // view | comment
+    string permission     
   }
 
   NOTIFICATION {
     uuid id PK
     uuid account_id FK
-    string kind           // deadline | overload | reminder
+    string kind           
     json payload
     datetime deliver_at
-    string status         // queued | sent | read
+    string status         
   }
 
   INTEREST_TAG {
