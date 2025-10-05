@@ -1,0 +1,656 @@
+openapi: 3.0.4
+info:
+  title: Course Planner
+  version: 0.1.0
+  description: |
+    Backend API for a student degree planning. 
+
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Programs
+  - name: Streams
+  - name: Requirements
+  - name: Courses
+  - name: Offerings
+  - name: Plans
+  - name: Terms
+  - name: Audit
+  - name: Collaboration
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new account
+      operationId: register
+      requestBody:
+        required: true
+        description: JSON body with name, email, password
+        content:
+          application/json:
+            example:
+              name: "Mario Azabo"
+              email: "mazabo2827@sdsu.edu"
+              password: "P@ssw0rd123"
+      responses:
+        "201":
+          description: Account created, verification email sent (returns minimal account info)
+        "400":
+          description: Bad request (validation error)
+        "409":
+          description: Conflict (email already exists)
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      operationId: login
+      requestBody:
+        required: true
+        description: JSON body with email and password
+        content:
+          application/json:
+            example:
+              email: "mazabo2827@sdsu.edu"
+              password: "P@ssw0rd123"
+      responses:
+        "200":
+          description: Authenticated (returns access_token, refresh_token, token_type)
+        "401":
+          description: Unauthorized (invalid credentials)
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Exchange refresh token for new access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        description: JSON body with refresh_token
+        content:
+          application/json:
+            example:
+              refresh_token: "xxxxx.yyyyy.zzzzz"
+      responses:
+        "200":
+          description: New access token (returns access_token, refresh_token, token_type)
+        "401":
+          description: Unauthorized (invalid/expired refresh token)
+
+  /students/me:
+    get:
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      summary: Get current student's profile
+      operationId: getMe
+      responses:
+        "200":
+          description: Returns current profile (id, account_id, name, major_program_id, catalog_year, interests[])
+        "401":
+          description: Unauthorized
+    put:
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      summary: Update current student's profile
+      operationId: updateMe
+      requestBody:
+        required: true
+        description: JSON body with any of name, major_program_id, catalog_year, interests[]
+        content:
+          application/json:
+            example:
+              name: "Edwin Alvarado"
+              major_program_id: "CE-BS"
+              catalog_year: "2025-2026"
+              interests: ["AI", "Web"]
+      responses:
+        "200":
+          description: Updated profile returned
+        "401":
+          description: Unauthorized
+
+  /programs:
+    get:
+      tags: [Programs]
+      summary: List programs
+      operationId: listPrograms
+      parameters:
+        - in: query
+          name: q
+          description: Full-text search
+          schema:
+            type: string
+        - in: query
+          name: level
+          schema:
+            type: string
+            enum: [BS, MS, PhD]
+      responses:
+        "200":
+          description: Returns array of programs (id, name, level, catalog_year)
+
+  /programs/{programId}:
+    get:
+      tags: [Programs]
+      summary: Get a program
+      operationId: getProgram
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns a program
+        "404":
+          description: Not Found
+
+  /programs/{programId}/streams:
+    get:
+      tags: [Streams]
+      summary: List streams for a program
+      operationId: listStreams
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns array of streams (id, program_id, name, description)
+        "404":
+          description: Not Found
+
+  /streams/{streamId}:
+    get:
+      tags: [Streams]
+      summary: Get a stream
+      operationId: getStream
+      parameters:
+        - in: path
+          name: streamId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns a stream
+        "404":
+          description: Not Found
+
+  /programs/{programId}/requirements:
+    get:
+      tags: [Requirements]
+      summary: Get program + optional stream requirements
+      operationId: getRequirements
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: stream_id
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns array of requirement rules (id, kind, min_units, rule{})
+        "404":
+          description: Not Found
+
+  /courses:
+    get:
+      tags: [Courses]
+      summary: Search and filter courses
+      operationId: listCourses
+      parameters:
+        - in: query
+          name: q
+          description: Keyword in id/title
+          schema:
+            type: string
+        - in: query
+          name: department
+          schema:
+            type: string
+        - in: query
+          name: units_min
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: units_max
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: level
+          schema:
+            type: string
+            enum: [lower, upper, grad]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Returns array of courses (id, title, units, department)
+
+  /courses/{courseId}:
+    get:
+      tags: [Courses]
+      summary: Get course details
+      operationId: getCourse
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns a course
+        "404":
+          description: Not Found
+
+  /courses/{courseId}/prereqs:
+    get:
+      tags: [Courses]
+      summary: Get prereq/coreq rules for a course
+      operationId: getCoursePrereqs
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns array of prerequisite rules (type, prereq_course_id, min_grade, group_tag)
+        "404":
+          description: Not Found
+
+  /offerings:
+    get:
+      tags: [Offerings]
+      summary: List course offerings for a term
+      operationId: listOfferings
+      parameters:
+        - in: query
+          name: term_code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: course_id
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns array of offerings (id, course_id, term_code, meeting_times[])
+
+  /plans:
+    get:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: List degree plans for current student
+      operationId: listPlans
+      responses:
+        "200":
+          description: Returns array of plans (id, program_id, catalog_year, name, terms[])
+        "401":
+          description: Unauthorized
+    post:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Create a degree plan
+      operationId: createPlan
+      requestBody:
+        required: true
+        description: JSON body with program_id, catalog_year, optional name
+        content:
+          application/json:
+            example:
+              program_id: "CE-BS"
+              catalog_year: "2025-2026"
+              name: "My Plan"
+      responses:
+        "201":
+          description: Created (returns plan)
+        "401":
+          description: Unauthorized
+
+  /plans/{planId}:
+    get:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Get a degree plan
+      operationId: getPlan
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Returns a plan
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+    patch:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Update plan settings
+      operationId: updatePlan
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with name? and/or settings? (free-form object)
+        content:
+          application/json:
+            example:
+              name: "Updated Plan"
+              settings:
+                color: "blue"
+                credit_cap: 18
+      responses:
+        "200":
+          description: Updated plan returned
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Delete a plan
+      operationId: deletePlan
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted (no content)
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+
+  /plans/{planId}/terms:
+    post:
+      tags: [Terms]
+      security: [{ bearerAuth: [] }]
+      summary: Add a term to a plan
+      operationId: addTerm
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with term_code and optional max_units
+        content:
+          application/json:
+            example:
+              term_code: "2026-Fall"
+              max_units: 18
+      responses:
+        "201":
+          description: Created (returns term)
+        "401":
+          description: Unauthorized
+
+  /plans/{planId}/terms/{termId}:
+    patch:
+      tags: [Terms]
+      security: [{ bearerAuth: [] }]
+      summary: Update a term (e.g., max units)
+      operationId: updateTerm
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: termId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with max_units
+        content:
+          application/json:
+            example:
+              max_units: 20
+      responses:
+        "200":
+          description: Updated term returned
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Terms]
+      security: [{ bearerAuth: [] }]
+      summary: Remove a term from a plan
+      operationId: deleteTerm
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: termId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted (no content)
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+
+  /plans/{planId}/terms/{termId}/courses:
+    post:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Add a planned course to a term
+      operationId: addPlannedCourse
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: termId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with course_id and optional status (planned|waitlist|registered)
+        content:
+          application/json:
+            example:
+              course_id: "COMPE-561"
+              status: "planned"
+      responses:
+        "201":
+          description: Created (returns planned course)
+        "401":
+          description: Unauthorized
+
+  /plans/{planId}/terms/{termId}/courses/{plannedCourseId}:
+    patch:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Update a planned course (status or move to different term)
+      operationId: updatePlannedCourse
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: termId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: plannedCourseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with status? and/or move_to_term_id?
+        content:
+          application/json:
+            example:
+              status: "registered"
+              move_to_term_id: "6f8663b2-8b0c-4b95-96b6-9a2e7bd0a1a1"
+      responses:
+        "200":
+          description: Updated planned course returned
+        "401":
+          description: Unauthorized
+    delete:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      summary: Remove a planned course
+      operationId: deletePlannedCourse
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: termId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: plannedCourseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted (no content)
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+
+  /plans/{planId}/audit:
+    get:
+      tags: [Audit]
+      security: [{ bearerAuth: [] }]
+      summary: Run degree audit for the plan (supports what-if)
+      operationId: runAudit
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: what_if_program_id
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: what_if_stream_id
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns audit result (summary and issues[])
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+
+  /plans/{planId}/share-links:
+    post:
+      tags: [Collaboration]
+      security: [{ bearerAuth: [] }]
+      summary: Create a share link for advisor collaboration
+      operationId: createShareLink
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: JSON body with permission (view|comment) and optional expires_in_days
+        content:
+          application/json:
+            example:
+              permission: "view"
+              expires_in_days: 14
+      responses:
+        "201":
+          description: Share link created (returns id, token, expires_at, permission)
+        "401":
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
