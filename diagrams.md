@@ -1,5 +1,6 @@
 
 # Entity Relationship Diagram (ERD)
+```mermaid
 erDiagram
   ACCOUNT ||--o| STUDENT_PROFILE : owns
   ACCOUNT ||--o{ NOTIFICATION : receives
