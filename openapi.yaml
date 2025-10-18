@@ -3,7 +3,7 @@ info:
   title: Course Planner
   version: 0.1.0
   description: |
-    Backend API for a student degree planning. 
+    Backend API for a student degree planning.
 
 servers:
   - url: http://localhost:8000
