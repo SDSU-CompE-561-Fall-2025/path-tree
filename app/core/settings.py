@@ -1,2 +1,0 @@
-# config.py
-# Configuration settings
