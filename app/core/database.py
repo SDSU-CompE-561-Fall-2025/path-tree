@@ -1,2 +1,10 @@
-# security.py
-# Stub for JWT helpers and security utilities
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from app.core.settings import settings
+
+class Base(DeclarativeBase):
+    pass
+
+engine = create_engine(settings.database_url, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+database_url = settings.DATABASE_URL
