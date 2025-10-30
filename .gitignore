@@ -1,16 +1,63 @@
-# Python
+# ---- Python ----
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .venv/
 .env
 .env.*
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
-# OS
-.DS_Store
+.tox/
+.coverage
+htmlcov/
+.pyre/
+.pytype/
+
+# ---- IDE / Editors ----
 .vscode/
 .idea/
-# dist
-dist/
+*.sublime-workspace
+*.sublime-project
+
+# ---- OS / System ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Distribution / Packaging ----
 build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+pip-wheel-metadata/
+
+# ---- Logs / Reports ----
+*.log
+*.out
+*.err
+*.tmp
+
+# ---- Test / Coverage ----
+coverage.xml
+*.cover
+.cache/
+
+# ---- Project-specific ----
+# Ignore compiled files or local backend data
+backend/__pycache__/
+backend/*.sqlite3
+backend/tmp/
+backend/logs/
+
+# ---- Dependency / Virtual Environment Files ----
+# requirements.txt and pyproject.toml are tracked intentionally, so don’t ignore them
+# but ignore automatically generated lock or backup files
+*.lock
+*.bak
+*.swp
+
+# ---- Misc ----
+# Pre-commit cache and related artifacts
+.pre-commit-config.yaml.old
