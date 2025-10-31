@@ -27,32 +27,42 @@ FastAPI backend for a student degree planning tool. It exposes endpoints to mana
 ## Project layout
 
 ```
-src/
-└─ app/
-   ├─ main.py                # FastAPI app entry; custom OpenAPI (servers, security labels)
-   ├─ api/
-   │  └─ v1/
-   │     └─ routes.py        # All v1 routers mounted here
-   ├─ core/
-   │  ├─ settings.py         # Env/config
-   │  ├─ database.py         # SQLAlchemy Base (DB wiring later)
-   │  └─ dependencies.py     # Shared FastAPI deps
-   ├─ models/                # SQLAlchemy models (add as you migrate to Postgres)
-   │  └─ program.py
-   ├─ repository/            # Data access (currently in-memory; swap to DB later)
-   │  ├─ program.py
-   │  └─ plan.py
-   ├─ services/              # Business logic (thin orchestration)
-   │  ├─ program.py
-   │  └─ plan.py
-   ├─ routes/                # HTTP layer (FastAPI routers)
-   │  ├─ status.py
-   │  ├─ auth.py
-   │  ├─ programs.py
-   │  └─ plans.py
-   └─ schemas/               # Pydantic schemas shared at the HTTP layer
-      ├─ token.py
-      └─ __init__.py
+backend/
+├── pyproject.toml
+├── README.md
+├── .env.example
+└── src/app/
+    ├── main.py
+    ├── api/v1/router.py
+    ├── core/
+    │   ├── settings.py
+    │   ├── database.py
+    │   ├── auth.py
+    │   └── dependencies.py
+    ├── models/
+    │   ├── account.py
+    │   ├── program.py
+    │   ├── plan.py
+    │   └── course.py
+    ├── repository/
+    │   ├── account.py
+    │   ├── program.py
+    │   └── plan.py
+    ├── routes/
+    │   ├── auth.py
+    │   ├── programs.py
+    │   ├── plans.py
+    │   └── status.py
+    ├── schemas/
+    │   ├── account.py
+    │   ├── program.py
+    │   ├── plan.py
+    │   ├── course.py
+    │   └── token.py
+    ├── services
+    │   ├── account.py
+    │   ├── program.py
+    │   ├── plan.py
 ```
 
 ---
@@ -80,7 +90,7 @@ pip install fastapi uvicorn[standard] pydantic-settings
 
 ### 3) Run the API
 ```bash
-uvicorn app.main:app --reload --app-dir src
+python -m uvicorn app.main:app --reload --app-dir backend/src
 ```
 
 Open the docs: <http://localhost:8000/docs>  
