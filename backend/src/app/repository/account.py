@@ -6,8 +6,6 @@ from app.models.account import Account
 
 
 class AccountRepository:
-    """Handles DB operations for user accounts."""
-
     def __init__(self, db: AsyncSession):
         self.db = db
 

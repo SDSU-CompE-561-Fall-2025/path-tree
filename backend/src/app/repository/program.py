@@ -32,7 +32,6 @@ class ProgramRepository:
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
 
-    # NEW: create a program
     async def create_program(self, *, id: str, title: str, faculty: str | None, level: str | None) -> Program:
         p = Program(id=id, title=title, faculty=faculty, level=level)
         self.db.add(p)

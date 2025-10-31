@@ -21,7 +21,6 @@ class ProgramRequirementOut(BaseModel):
     rule: str
 
 
-# NEW: payload for creating a program
 class ProgramCreate(BaseModel):
     id: str
     title: str

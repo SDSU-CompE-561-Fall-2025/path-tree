@@ -12,7 +12,6 @@ from app.schemas.program import (
 
 router = APIRouter()
 
-
 @router.get("", response_model=list[ProgramOut])
 async def list_programs(
     faculty: str | None = None,
@@ -23,7 +22,6 @@ async def list_programs(
     progs = await repo.list_programs(faculty, level)
     return [ProgramOut.model_validate(p, from_attributes=True) for p in progs]
 
-
 @router.get("/{program_id}", response_model=ProgramOut)
 async def get_program(program_id: str, db: AsyncSession = Depends(get_db)):
     repo = ProgramRepository(db)
@@ -32,13 +30,11 @@ async def get_program(program_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Program not found")
     return ProgramOut.model_validate(prog, from_attributes=True)
 
-
 @router.get("/{program_id}/streams", response_model=list[StreamOut])
 async def list_streams(program_id: str, db: AsyncSession = Depends(get_db)):
     repo = ProgramRepository(db)
     streams = await repo.list_streams(program_id)
     return [StreamOut.model_validate(s, from_attributes=True) for s in streams]
-
 
 @router.get("/{program_id}/requirements", response_model=list[ProgramRequirementOut])
 async def list_requirements(
@@ -50,8 +46,7 @@ async def list_requirements(
     reqs = await repo.list_requirements(program_id, stream_id)
     return [ProgramRequirementOut.model_validate(r, from_attributes=True) for r in reqs]
 
-
-#create a program
+# NEW: Create a program
 @router.post("", response_model=ProgramOut, status_code=status.HTTP_201_CREATED)
 async def create_program(payload: ProgramCreate, db: AsyncSession = Depends(get_db)):
     repo = ProgramRepository(db)

@@ -31,7 +31,7 @@ class PlanRepository:
         stmt = delete(Plan).where(Plan.id == plan_id)
         await self.db.execute(stmt)
 
-    # Terms
+    # --- terms ---
     async def list_terms(self, plan_id: int) -> list[PlanTerm]:
         stmt = select(PlanTerm).where(PlanTerm.plan_id == plan_id).order_by(PlanTerm.term_code)
         res = await self.db.execute(stmt)
@@ -43,6 +43,7 @@ class PlanRepository:
         await self.db.flush()
         return term
 
+    # --- courses ---
     async def add_course(self, term_id: int, course_code: str) -> PlanCourse:
         pc = PlanCourse(term_id=term_id, course_code=course_code)
         self.db.add(pc)
@@ -51,6 +52,7 @@ class PlanRepository:
 
     async def remove_course(self, term_id: int, course_code: str) -> None:
         stmt = delete(PlanCourse).where(
-            PlanCourse.term_id == term_id, PlanCourse.course_code == course_code
+            PlanCourse.term_id == term_id,
+            PlanCourse.course_code == course_code,
         )
         await self.db.execute(stmt)
