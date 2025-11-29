@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/register", response_model=AccountOut, status_code=status.HTTP_201_CREATED)
 async def register(payload: AccountCreate, db: AsyncSession = Depends(get_db)):
     repo = AccountRepository(db)
-    if await repo.get_by_email(payload.email):
+    if await repo.get_by_email(payload.email): 
         raise HTTPException(status_code=409, detail="Email already registered")
     user = await repo.create(payload.email, payload.name, payload.password)
     return AccountOut.model_validate(user, from_attributes=True)
