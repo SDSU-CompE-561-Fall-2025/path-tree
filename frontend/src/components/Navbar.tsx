@@ -11,20 +11,20 @@ import UserButton from "./UserButton";
 
 const navList = [
 	{
-		label: "Dashboard",
+		label: "Home",
 		link: "/",
 	},
 	{
-		label: "Summary",
-		link: "/summary",
+		label: "Your Profile",
+		link: "/profile",
+	},
+	{
+		label: "Classes",
+		link: "/classes",
 	},
 	{
 		label: "About",
 		link: "/about",
-	},
-	{
-		label: "Support",
-		link: "/support",
 	},
 ];
 
