@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ThemeSwitcherButton } from "@/components/ThemeSwitcherButton"; // ✅ import your theme toggle
+import { ThemeSwitcherButton } from "@/components/ThemeSwitcherButton";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -41,38 +48,37 @@ export function Navbar() {
               )}
             </div>
           ))}
+
+          {/* Classes Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                "flex items-center gap-1 text-lg font-medium text-muted-foreground transition-colors hover:text-foreground outline-none",
+                (pathname.startsWith("/classes") ||
+                  pathname.startsWith("/program-of-study")) &&
+                  "text-foreground"
+              )}
+            >
+              Classes
+              <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              <DropdownMenuItem asChild>
+                <Link href="/classes" className="cursor-pointer">
+                  Class Search
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/program-of-study" className="cursor-pointer">
+                  Program of Study
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-            {isActive(item.href) && (
-              <span className="absolute -bottom-1 left-0 h-[2px] w-full rounded-full bg-blue-400" />
-            )}
-          </div>
-        ))}
-
-        {/* Classes Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              "flex items-center gap-1 text-lg font-medium text-muted-foreground transition-colors hover:text-foreground outline-none",
-              (pathname.startsWith("/classes") || pathname.startsWith("/program-of-study")) && "text-foreground"
-            )}
-          >
-            Classes
-            <ChevronDown className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center">
-            <DropdownMenuItem asChild>
-              <Link href="/classes" className="cursor-pointer">
-                Class Search
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/program-of-study" className="cursor-pointer">
-                Program of Study
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Right side: Theme toggle */}
+        <ThemeSwitcherButton />
       </nav>
     </header>
   );
