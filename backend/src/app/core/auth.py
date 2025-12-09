@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from typing import Optional
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -36,7 +36,7 @@ def create_access_token(data: dict, expires_delta: timedelta ) -> str:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print(f"DEBUG create_access_token: Created token expiring at {expire} UTC")
+    #print(f"DEBUG create_access_token: Created token expiring at {expire} UTC")
     return encoded_jwt
 
 
@@ -115,16 +115,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         )
     return payload
     
-def create_refresh_token(data: dict, expires_delta: timedelta ) -> str:
+def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
     """
     Create a JWT refresh token.
-
-    Args:
-        data: The data to encode in the token
-        expires_delta: Optional custom expiration time
-
-    Returns:
-        str: The encoded JWT token
     """
     to_encode = data.copy()
     if expires_delta:
@@ -132,19 +125,20 @@ def create_refresh_token(data: dict, expires_delta: timedelta ) -> str:
     else:
         expire = datetime.utcnow() + timedelta(days=7)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # ✅ use REFRESH_SECRET_KEY here
+    return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
-def verify_refresh_token(token: str) -> dict :
+
+def verify_refresh_token(token: str) -> Optional[dict] :
     """
     Verify and decode a JWT refresh token.
-
-    Args:
-        token: The JWT token to verify"""
+    Returns the payload if valid, otherwise None.
+    """
     try:
         payload = jwt.decode(
             token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
+            REFRESH_SECRET_KEY,        
+            algorithms=[ALGORITHM],
         )
     except PyJWTError:
         return None

@@ -1,6 +1,6 @@
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import Optional
 from app.models.completion import Completion
 
 
@@ -19,9 +19,9 @@ class CompletionRepository:
         student_email: str,
         course_code: str,
         status: str,
-        grade: str | None = None,
-        term_code: str | None = None,
-        units_earned: int | None = None,
+        grade: Optional[str] = None,
+        term_code: Optional[str] = None,
+        units_earned: Optional[int] = None,
     ) -> Completion:
         """Add a new course completion record."""
         completion = Completion(
@@ -36,17 +36,17 @@ class CompletionRepository:
         await self.db.flush()
         return completion
 
-    async def get(self, completion_id: int) -> Completion | None:
+    async def get(self, completion_id: int) -> Completion:
         """Get a specific completion by ID."""
         return await self.db.get(Completion, completion_id)
 
     async def update_completion(
         self,
         completion: Completion,
-        status: str | None = None,
-        grade: str | None = None,
-        term_code: str | None = None,
-        units_earned: int | None = None,
+        status: Optional[str] = None,
+        grade: Optional[str] = None,
+        term_code: Optional[str] = None,
+        units_earned: Optional[int] = None,
     ) -> Completion:
         """Update an existing completion record."""
         if status is not None:

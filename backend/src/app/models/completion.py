@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import String, ForeignKey, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column
-
+from typing import Optional
 from app.core.database import Base
 
 
@@ -19,13 +19,13 @@ class Completion(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="planned")
     
     # Grade: "A", "A-", "B+", "B", etc., or null if in-progress/planned
-    grade: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    grade: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
     
     # Term when taken/taking/will-take: e.g., "Fall 2023", "Spring 2024"
-    term_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    term_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     
     # Units earned (usually matches course units, but can differ for repeated courses)
-    units_earned: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    units_earned: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)

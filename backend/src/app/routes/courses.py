@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import Optional
 from app.core.database import get_db
 from app.repository.course import CourseRepository
 from app.schemas.course import CourseOut
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("", response_model=list[CourseOut])
 async def list_courses(
-    search: str | None = None,
+    search: Optional[str] = None,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):

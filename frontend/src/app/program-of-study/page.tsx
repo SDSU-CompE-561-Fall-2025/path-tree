@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { getAccessToken, getUserFirstName } from "@/lib/auth";
 import type { Program, Requirement, Course, SubRequirement } from "@/types/program";
 import { useRouter } from "next/navigation";
-
+import { Button } from "@/components/ui/button";
 
 
 // Status icon component
@@ -247,24 +247,14 @@ export default function ProgramOfStudyPage() {
           )}
         </div>
 
-        {/* Not Logged In State */}
-        {!isLoggedIn && !loading && (
-          <div className="text-center py-16">
-            <div className="mb-6">
-              <XCircle className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-2xl font-semibold mb-2">Authentication Required</h2>
-              <p className="text-muted-foreground mb-6">
-                Please log in to view your program of study and course audit.
-              </p>
-              <button
-                onClick={() => router.push('/login')}
-                className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Go to Login
-              </button>
-            </div>
-          </div>
-        )}
+  {/* Not Logged In State */}
+  {!isLoggedIn && !loading && (
+    <div className="max-w-5xl mx-auto px-4 py-16 text-center">
+      <h1 className="text-2xl font-semibold mb-4">Please Log In</h1>
+      <p className="text-muted-foreground mb-6">You need to be logged in to manage your courses.</p>
+      <Button onClick={() => router.push('/login')}>Go to Login</Button>
+    </div>
+  )}
 
         {/* Loading State */}
         {isLoggedIn && loading && (

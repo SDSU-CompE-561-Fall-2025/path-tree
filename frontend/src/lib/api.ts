@@ -269,6 +269,18 @@ export const api = {
       return apiFetch<any>(`/courses/${courseCode}`);
     },
   },
+
+  // Terms - academic terms
+ // Terms - academic terms
+terms: {
+  list: () => {
+    return apiFetch<any[]>('/terms');
+  },
+
+  get: (termId: number) => {
+    return apiFetch<any>(`/terms/${termId}`);
+  },
+},
 };
 
 export { ApiError };

@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import Optional
 from app.models.course import Course
 
 
@@ -8,7 +8,7 @@ class CourseRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def list_courses(self, search: str | None = None, limit: int = 100) -> list[Course]:
+    async def list_courses(self, search: Optional[str] = None, limit: int = 100) -> list[Course]:
         """List courses with optional search filter."""
         stmt = select(Course).order_by(Course.code)
         
@@ -23,6 +23,6 @@ class CourseRepository:
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
 
-    async def get(self, course_code: str) -> Course | None:
+    async def get(self, course_code: str) -> Optional[Course]:
         """Get a specific course by code."""
         return await self.db.get(Course, course_code)
