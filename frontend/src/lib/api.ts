@@ -234,6 +234,12 @@ export const api = {
       });
     },
 
+    deleteTerm: (planId: number, termId: number) => {
+      return apiFetch(`/plans/${planId}/terms/${termId}`, {
+        method: 'DELETE',
+      });
+    },
+
     // Courses
     addCourse: (planId: number, termId: number, courseCode: string) => {
       return apiFetch<any>(`/plans/${planId}/terms/${termId}/courses`, {
@@ -246,6 +252,21 @@ export const api = {
       return apiFetch(`/plans/${planId}/terms/${termId}/courses/${courseCode}`, {
         method: 'DELETE',
       });
+    },
+  },
+
+  // Courses - course catalog
+  courses: {
+    list: (search?: string, limit?: number) => {
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (limit) params.append('limit', limit.toString());
+      const query = params.toString();
+      return apiFetch<any[]>(`/courses${query ? `?${query}` : ''}`);
+    },
+
+    get: (courseCode: string) => {
+      return apiFetch<any>(`/courses/${courseCode}`);
     },
   },
 };

@@ -356,7 +356,8 @@ const TERM_OPTIONS = [
 export default function AddPlanPage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [planName, setPlanName] = useState("My Academic Plan");
   const [terms, setTerms] = useState<Term[]>([]);
   const [newTermCode, setNewTermCode] = useState(TERM_OPTIONS[0]);
@@ -365,14 +366,24 @@ export default function AddPlanPage() {
   const [currentPlanId, setCurrentPlanId] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setIsLoggedIn(false);
-      setLoading(false);
-      return;
-    }
-    setIsLoggedIn(true);
-    setLoading(false);
+    // Add a small delay to ensure localStorage is available
+    const checkAuth = () => {
+      const token = getAccessToken();
+      console.log("Token check:", token ? "Found" : "Not found");
+      if (!token) {
+        setIsLoggedIn(false);
+        setCheckingAuth(false);
+        return;
+      }
+      setIsLoggedIn(true);
+      setCheckingAuth(false);
+    };
+    
+    // Run check immediately and also after a brief delay
+    checkAuth();
+    const timeoutId = setTimeout(checkAuth, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const handleAddSemester = () => {
@@ -431,6 +442,10 @@ export default function AddPlanPage() {
   };
 
   const handleSavePlan = async () => {
+    console.log("Save plan clicked");
+    console.log("Plan name:", planName);
+    console.log("Terms:", terms);
+    
     if (!planName.trim()) {
       alert("Please enter a plan name");
       return;
@@ -443,24 +458,36 @@ export default function AddPlanPage() {
 
     try {
       setLoading(true);
+      console.log("Creating plan...");
       
       // Create the plan
       const plan = await api.plans.create({
         name: planName,
         program_id: null,
       });
+      console.log("Plan created:", plan);
 
       // Add each term and its courses
       for (const term of terms) {
+        console.log("Adding term:", term.term_code);
         const createdTerm = await api.plans.addTerm(plan.id, term.term_code);
+        console.log("Term created:", createdTerm);
         
         // Add courses to this term
+        console.log(`Term has ${term.courses.length} courses to add`);
         for (const course of term.courses) {
-          await api.plans.addCourse(plan.id, createdTerm.id, course.course_code);
+          console.log("Adding course:", course.course_code, "to term", createdTerm.id);
+          try {
+            await api.plans.addCourse(plan.id, createdTerm.id, course.course_code);
+            console.log("Course added successfully");
+          } catch (err) {
+            console.error("Failed to add course:", course.course_code, err);
+          }
         }
       }
 
       alert("Plan saved successfully!");
+      console.log("Redirecting to profile...");
       router.push("/profile");
     } catch (error) {
       console.error("Failed to save plan:", error);
@@ -480,15 +507,27 @@ export default function AddPlanPage() {
     return AVAILABLE_COURSES.find(c => c.code === courseCode);
   };
 
+  if (checkingAuth) {
+    console.log("Still checking auth...");
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-16 text-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
+    console.log("Not logged in - redirecting to login");
     return (
       <div className="max-w-5xl mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold mb-4">Please Log In</h1>
         <p className="text-muted-foreground mb-6">You need to be logged in to create a plan.</p>
-        <Button onClick={() => router.push('/sign-in')}>Go to Login</Button>
+        <Button onClick={() => router.push('/login')}>Go to Login</Button>
       </div>
     );
   }
+
+  console.log("User is logged in - showing form");
 
   return (
     <div className="flex min-h-full flex-col">
