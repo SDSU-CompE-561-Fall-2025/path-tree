@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import {api} from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
 import { Plus, X, Save } from "lucide-react";
 
 type Course = {
@@ -38,17 +37,18 @@ export default function AddPlanPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = getAccessToken();
-      console.log("Token check:", token ? "Found" : "Not found");
-      if (!token) {
+      try {
+        await api.auth.me();
+        setIsLoggedIn(true);
+        setCheckingAuth(false);
+        await fetchAvailableCourses();
+        await fetchTermOptions();
+      } catch (error) {
+        console.error('Auth check failed:', error);
         setIsLoggedIn(false);
         setCheckingAuth(false);
-        return;
+        router.push("/login");
       }
-      setIsLoggedIn(true);
-      setCheckingAuth(false);
-      await fetchAvailableCourses();
-      await fetchTermOptions();
     };
     
     checkAuth();

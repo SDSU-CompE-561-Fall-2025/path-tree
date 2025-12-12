@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { api } from "@/lib/api";
-import { CheckCircle, Clock, Calendar, BookOpen, FileText, Trash2 } from "lucide-react";
+import { CheckCircle, Clock, Calendar, BookOpen, FileText, Trash2, GraduationCap, Search } from "lucide-react";
 import { clearAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 type MeResponse = {
@@ -317,45 +317,35 @@ export default function ProfilePage() {
             )}
           </section>
 
-          <section className="grid gap-6 grid-cols-2 md:grid-cols-3">
+          <section className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <Link
               href="/classes"
-              className="
-                border 
-                border-dashed 
-                rounded 
-                flex 
-                items-center 
-                justify-center 
-                aspect-square 
-                bg-muted/20 
-                hover:bg-muted/40 
-                transition 
-                text-sm 
-                font-medium
-              "
+              className="group relative overflow-hidden border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-950/40 dark:hover:to-blue-900/30"
             >
-              Manage Courses
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-blue-600 text-white">
+                  <Search className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold">Manage Courses</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Search and explore available courses
+              </p>
             </Link>
 
             <Link
               href="/program-of-study"
-              className="
-                border 
-                border-dashed 
-                rounded 
-                flex 
-                items-center 
-                justify-center 
-                aspect-square 
-                bg-muted/20 
-                hover:bg-muted/40 
-                transition 
-                text-sm 
-                font-medium
-              "
+              className="group relative overflow-hidden border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-950/40 dark:hover:to-purple-900/30"
             >
-              View Audit
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-purple-600 text-white">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold">View Audit</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Track your degree progress and requirements
+              </p>
             </Link>
           </section>
         </div>

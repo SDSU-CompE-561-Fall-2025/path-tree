@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
 import { ArrowLeft, Trash2, Edit2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -54,15 +53,19 @@ export default function ViewPlanPage() {
   const [newSemesterName, setNewSemesterName] = useState("");
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setIsLoggedIn(false);
-      setLoading(false);
-      router.push("/sign-in");
-      return;
-    }
-    setIsLoggedIn(true);
-    fetchPlan();
+    const checkAuth = async () => {
+      try {
+        await api.auth.me();
+        setIsLoggedIn(true);
+        fetchPlan();
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsLoggedIn(false);
+        setLoading(false);
+        router.push("/login");
+      }
+    };
+    checkAuth();
   }, [planId]);
 
   const fetchCourseDetails = async (courseCode: string): Promise<Course> => {
