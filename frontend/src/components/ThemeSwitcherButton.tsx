@@ -10,21 +10,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { SurpriseOverlay } from "./SurpriseOverlay"; // import overlay
 
 export function ThemeSwitcherButton() {
   const { setTheme, theme } = useTheme();
   const [flashOverlay, setFlashOverlay] = useState<"light" | "dark" | null>(null);
+  const [triggerOverlay, setTriggerOverlay] = useState(false);
 
-  const handleSetTheme = (newTheme: string) => {
+  const handleSetTheme = (newTheme: "light" | "dark" | "system") => {
     if (newTheme !== theme) {
-      // Step 1: trigger overlay
-      setFlashOverlay(newTheme === "light" ? "light" : "dark");
+      // Step 1: set target theme for overlay
+      if (newTheme === "light" || newTheme === "dark") {
+        setFlashOverlay(newTheme);
+        setTriggerOverlay(true);
+      }
 
-      // Step 2: switch theme while overlay is active
-      setTheme(newTheme);
-
-      // Step 3: remove overlay after animation
-      setTimeout(() => setFlashOverlay(null), 2000); // match animation duration
+      // Step 2: theme switch happens inside SurpriseOverlay via onFlash callback
     }
   };
 
@@ -51,12 +52,16 @@ export function ThemeSwitcherButton() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Flashbang overlay */}
-      {flashOverlay === "light" && (
-        <div className="fixed inset-0 bg-white animate-flashbang pointer-events-none z-40" />
-      )}
-      {flashOverlay === "dark" && (
-        <div className="fixed inset-0 bg-black animate-flashbang pointer-events-none z-40" />
+      {/* Surprise overlay handles zap + flash */}
+      {flashOverlay && (
+        <SurpriseOverlay
+          trigger={triggerOverlay}
+          targetTheme={flashOverlay}
+          onFlash={() => {
+            setTheme(flashOverlay);
+            setTriggerOverlay(false); // reset trigger
+          }}
+        />
       )}
     </>
   );
