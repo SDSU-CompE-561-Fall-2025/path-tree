@@ -24,7 +24,7 @@ export function SurpriseOverlayDark({ trigger, onFlash }: SurpriseOverlayDarkPro
 
         const overlayTimer = setTimeout(() => {
           setShowOverlay(false);
-        }, 3000);
+        }, 2000); // match fade duration
 
         return () => clearTimeout(overlayTimer);
       }, 500);
@@ -41,7 +41,7 @@ export function SurpriseOverlayDark({ trigger, onFlash }: SurpriseOverlayDarkPro
         </div>
       )}
       {showOverlay && (
-        <div className="fixed inset-0 bg-black animate-surprise-fade-dark pointer-events-none z-40" />
+        <div className="fixed inset-0 bg-black animate-surprise-fade pointer-events-none z-40" />
       )}
     </>
   );

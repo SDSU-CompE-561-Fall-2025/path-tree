@@ -121,18 +121,12 @@
 	}
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer utilities {
-  @keyframes flashbang {
-    0%   { opacity: 1; }
-    50%  { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  .animate-flashbang {
-    animation: flashbang 2s ease-out forwards;
-  }
+@keyframes surprise-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
+
+.animate-surprise-fade {
+  animation: surprise-fade 2s ease-out forwards;
+}
+
