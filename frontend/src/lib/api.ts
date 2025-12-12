@@ -208,7 +208,14 @@ export const api = {
     get: (planId: number) => {
       return apiFetch<any>(`/plans/${planId}`);
     },
-
+     audit: (planId: number) => {
+    return apiFetch<any>(`/plans/${planId}/audit`);
+  },
+share(planId: number) {
+  return apiFetch<{ share_url: string }>(`/plans/${planId}/share-links`, {
+    method: "POST",
+  });
+},
     update: (planId: number, data: { name?: string }) => {
       return apiFetch<any>(`/plans/${planId}`, {
         method: 'PATCH',

@@ -1,4 +1,4 @@
-// Backend schema types
+// ===== Backend-facing types =====
 export interface Program {
   id: string;
   title: string;
@@ -19,7 +19,7 @@ export interface ProgramRequirement {
   rule: string;
 }
 
-// Frontend display types for audit view
+// ===== Frontend audit view types =====
 export interface Course {
   code: string;
   title: string;
@@ -42,20 +42,4 @@ export interface Requirement {
   title: string;
   status: "complete" | "incomplete" | "in-progress";
   subRequirements: SubRequirement[];
-}
-
-export interface BackendRequirementStatus {
-  requirement_id: number;
-  rule: string;
-  satisfied: boolean;
-  completed_courses: string[];
-  missing_courses: string[];
-}
-
-export interface BackendPlanAudit {
-  plan_id: number;
-  program_id: string | null;
-  total_requirements: number;
-  satisfied_count: number;
-  requirements: BackendRequirementStatus[];
 }

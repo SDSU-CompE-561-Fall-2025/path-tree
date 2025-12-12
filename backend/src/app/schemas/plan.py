@@ -36,3 +36,18 @@ class PlanTermOut(BaseModel):
     plan_id: int
     term_code: str
     courses: list["PlanCourseOut"] = []
+    
+class RequirementStatusOut(BaseModel):
+    requirement_id: int
+    rule: str
+    satisfied: bool
+    completed_courses: list[str]
+    missing_courses: list[str]
+
+
+class PlanAuditOut(BaseModel):
+    plan_id: int
+    program_id: Optional[str]
+    total_requirements: int
+    satisfied_count: int
+    requirements: list[RequirementStatusOut]

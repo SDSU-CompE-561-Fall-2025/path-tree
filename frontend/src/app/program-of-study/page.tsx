@@ -6,8 +6,9 @@ import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock } from "lucide-r
 import { api } from "@/lib/api";
 import { getAccessToken, getUserFirstName } from "@/lib/auth";
 import type { Program, Requirement, Course, SubRequirement } from "@/types/program";
-import { useRouter } from "next/navigation";
+import { useRouter , useSearchParams} from "next/navigation";
 import { Button } from "@/components/ui/button";
+import type { BackendPlanAudit } from "@/types/program";
 
 
 // Status icon component
@@ -22,6 +23,7 @@ const StatusIcon = ({ status }: { status: "complete" | "incomplete" | "in-progre
 
 export default function ProgramOfStudyPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [auditData, setAuditData] = useState<Requirement[]>([]);
@@ -29,7 +31,35 @@ export default function ProgramOfStudyPage() {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  
+  const generateShareLink = async () => {
+  try {
+    setError(null);
+    setShareLink(null);
 
+    // Get all plans
+    const plans = await api.plans.list();
+    if (!plans || plans.length === 0) {
+      setError("No plan found to generate a share link.");
+      return;
+    }
+
+    // Prefer a plan whose program_id matches the selected program, otherwise first plan
+    const planForProgram =
+      plans.find((p: any) => p.program_id === selectedProgram?.id) ?? plans[0];
+
+    // Build a URL that points back to this page, with ?planId=...
+    const baseUrl =
+      typeof window !== "undefined" ? window.location.origin : "";
+
+    const url = `${baseUrl}/program-of-study?planId=${planForProgram.id}`;
+    setShareLink(url);
+  } catch (err: any) {
+    console.error("Failed to generate share link:", err);
+    setError(err.message || "Failed to generate share link.");
+  }
+};
   // Check authentication on mount
   useEffect(() => {
     const token = getAccessToken();
@@ -68,95 +98,213 @@ export default function ProgramOfStudyPage() {
   }, []);
 
   // Fetch program requirements when program changes
-  useEffect(() => {
-    if (!isLoggedIn || !selectedProgram) return;
+ // Fetch program requirements when program changes
+// Fetch program requirements when program changes
+useEffect(() => {
+  if (!isLoggedIn || !selectedProgram) return;
 
-    const fetchProgramData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch user's course completions
-        const completionsData = await api.completions.list();
-        
-        // Transform completions into audit structure by grouping
-        const transformedAudit = transformCompletionsToAudit(completionsData);
+  const fetchProgramData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 1) Fetch user's course completions AND their plans at the same time
+      const [completionsData, plans] = await Promise.all([
+        api.completions.list(),
+        api.plans.list(), // you should already have this
+      ]);
+
+      // If there are no plans, fall back to completions-only view
+      if (!plans || plans.length === 0) {
+        const transformedAudit = transformCompletionsToAudit(null, completionsData);
         setAuditData(transformedAudit);
-        
-      } catch (err: any) {
-        console.error('Failed to fetch program data:', err);
-        setError(err.message || 'Failed to load program data');
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchProgramData();
-  }, [isLoggedIn, selectedProgram]);
+      // 2) Choose a plan for this program (or just use the first plan)
+     const planIdParam = searchParams.get("planId");
+let planForProgram: any | undefined = undefined;
 
-  // Helper function to transform completions into audit format
-  const transformCompletionsToAudit = (completions: any[]): Requirement[] => {
-    if (completions.length === 0) return [];
+if (planIdParam) {
+  const numericId = Number(planIdParam);
+  if (!Number.isNaN(numericId)) {
+    planForProgram = plans.find((p: any) => p.id === numericId);
+  }
+}
 
-    // Group courses by category
-    const categories: { [key: string]: any[] } = {
-      'EE Core': [],
-      'Mathematics': [],
-      'Physics': [],
-      'Computer Science': [],
-      'General Education': [],
-      'Other': [],
-    };
+// If not found by URL, fall back to program-based matching or first plan
+if (!planForProgram) {
+  planForProgram =
+    plans.find((p: any) => p.program_id === selectedProgram.id) ?? plans[0];
+}
+      // 3) Get backend audit for that plan
+      const audit: BackendPlanAudit = await api.plans.audit(planForProgram.id);
 
-    completions.forEach((completion: any) => {
-      const courseData = {
-        code: completion.course_code,
-        title: '', // Would need to look up from courses table
-        units: completion.units_earned || 3,
-        grade: completion.grade || '',
-        term: completion.term_code || '',
-        status: completion.status,
-      };
-
-      if (completion.course_code.startsWith('EE')) {
-        categories['EE Core'].push(courseData);
-      } else if (completion.course_code.startsWith('MATH')) {
-        categories['Mathematics'].push(courseData);
-      } else if (completion.course_code.startsWith('PHYS')) {
-        categories['Physics'].push(courseData);
-      } else if (completion.course_code.startsWith('CS')) {
-        categories['Computer Science'].push(courseData);
-      } else if (['ENGL', 'COMM', 'HIST', 'PSYCH', 'SOC', 'ART', 'MUS', 'PHIL', 'ECON'].some(prefix => completion.course_code.startsWith(prefix))) {
-        categories['General Education'].push(courseData);
-      } else {
-        categories['Other'].push(courseData);
-      }
-    });
-
-    // Convert to Requirement structure
-    const requirements: Requirement[] = [];
-    Object.entries(categories).forEach(([categoryName, courses]) => {
-      if (courses.length > 0) {
-        const completedCount = courses.filter((c: any) => c.status === 'completed').length;
-        const status = completedCount === courses.length ? 'complete' : completedCount > 0 ? 'in-progress' : 'incomplete';
-        
-        requirements.push({
-          id: categoryName.toLowerCase().replace(/\s+/g, '-'),
-          title: categoryName,
-          status: status as 'complete' | 'incomplete' | 'in-progress',
-          subRequirements: [{
-            id: `${categoryName.toLowerCase().replace(/\s+/g, '-')}-courses`,
-            title: `${categoryName} Courses`,
-            status: status as 'complete' | 'incomplete' | 'in-progress',
-            description: `${courses.length} courses`,
-            courses: courses,
-          }],
-        });
-      }
-    });
-
-    return requirements;
+      // 4) Convert audit + completions into your Requirement[] structure
+      const transformedAudit = transformCompletionsToAudit(audit, completionsData);
+      setAuditData(transformedAudit);
+    } catch (err: any) {
+      console.error("Failed to fetch program data:", err);
+      setError(err.message || "Failed to load program data");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  fetchProgramData();
+}, [isLoggedIn, selectedProgram]);
+  // Helper function to transform completions into audit format
+ // Helper function to transform backend audit + completions into Requirement[]
+// Convert backend audit + completions → UI Requirement[]
+// Fallback: your original grouping by course prefixes (used if audit is empty)
+const buildCategoryBasedRequirements = (completions: any[]): Requirement[] => {
+  if (!completions || completions.length === 0) return [];
+
+  const categories: { [key: string]: Course[] } = {
+    "EE Core": [],
+    Mathematics: [],
+    Physics: [],
+    "Computer Science": [],
+    "General Education": [],
+    Other: [],
+  };
+
+  completions.forEach((completion: any) => {
+    const courseData: Course = {
+      code: completion.course_code,
+      title: "",
+      units: completion.units_earned || 3,
+      grade: completion.grade || "",
+      term: completion.term_code || "",
+      status: completion.status,
+    };
+
+    if (completion.course_code.startsWith("EE")) {
+      categories["EE Core"].push(courseData);
+    } else if (completion.course_code.startsWith("MATH")) {
+      categories["Mathematics"].push(courseData);
+    } else if (completion.course_code.startsWith("PHYS")) {
+      categories["Physics"].push(courseData);
+    } else if (completion.course_code.startsWith("CS")) {
+      categories["Computer Science"].push(courseData);
+    } else if (
+      ["ENGL", "COMM", "HIST", "PSYCH", "SOC", "ART", "MUS", "PHIL", "ECON"].some(
+        (prefix) => completion.course_code.startsWith(prefix)
+      )
+    ) {
+      categories["General Education"].push(courseData);
+    } else {
+      categories["Other"].push(courseData);
+    }
+  });
+
+  const requirements: Requirement[] = [];
+  Object.entries(categories).forEach(([categoryName, courses]) => {
+    if (courses.length > 0) {
+      const completedCount = courses.filter((c) => c.status === "completed")
+        .length;
+      const status: "complete" | "incomplete" | "in-progress" =
+        completedCount === courses.length
+          ? "complete"
+          : completedCount > 0
+          ? "in-progress"
+          : "incomplete";
+
+      requirements.push({
+        id: categoryName.toLowerCase().replace(/\s+/g, "-"),
+        title: categoryName,
+        status,
+        subRequirements: [
+          {
+            id: `${categoryName.toLowerCase().replace(/\s+/g, "-")}-courses`,
+            title: `${categoryName} Courses`,
+            status,
+            description: `${courses.length} courses`,
+            courses,
+          },
+        ],
+      });
+    }
+  });
+
+  return requirements;
+};
+
+// MAIN: use backend audit if available; otherwise fallback to category grouping
+const transformCompletionsToAudit = (
+  audit: BackendPlanAudit | null,
+  completions: any[]
+): Requirement[] => {
+  // If there is no audit or no audit requirements, use your old grouping
+  if (!audit || !audit.requirements || audit.requirements.length === 0) {
+    return buildCategoryBasedRequirements(completions);
+  }
+
+  // Map completions by course code for extra info
+  const completionByCode: Record<string, any> = {};
+  completions.forEach((c: any) => {
+    completionByCode[c.course_code] = c;
+  });
+
+  return audit.requirements.map((req) => {
+    const courses: Course[] = [];
+
+    // Courses marked completed in audit
+    req.completed_courses.forEach((code) => {
+      const comp = completionByCode[code] || {};
+      courses.push({
+        code,
+        title: "",
+        units: comp.units_earned ?? 0,
+        grade: comp.grade ?? "",
+        term: comp.term_code ?? "",
+        status: comp.status === "in-progress" ? "in-progress" : "completed",
+      });
+    });
+
+    // Courses still missing in audit
+    req.missing_courses.forEach((code) => {
+      const comp = completionByCode[code] || {};
+      courses.push({
+        code,
+        title: "",
+        units: comp.units_earned ?? 0,
+        grade: comp.grade ?? "",
+        term: comp.term_code ?? "",
+        status: "not-taken",
+      });
+    });
+
+    const completed = courses.filter((c) => c.status === "completed").length;
+    const inProgress = courses.filter((c) => c.status === "in-progress").length;
+
+    let status: "complete" | "incomplete" | "in-progress" = "incomplete";
+    if (completed === courses.length && courses.length > 0) {
+      status = "complete";
+    } else if (completed > 0 || inProgress > 0) {
+      status = "in-progress";
+    }
+
+    const title =
+      req.rule && req.rule.trim().length > 0
+        ? req.rule
+        : `Requirement ${req.requirement_id}`;
+
+    return {
+      id: String(req.requirement_id),
+      title,
+      status,
+      subRequirements: [
+        {
+          id: `${req.requirement_id}-sub`,
+          title,
+          status,
+          courses,
+        },
+      ],
+    };
+  });
+};
 
   // Calculate GPA and units from all courses
   const calculateStats = () => {
@@ -424,7 +572,33 @@ export default function ProgramOfStudyPage() {
             Collapse All
           </button>
         </div>
+        {/* SHARE AUDIT LINK BUTTON */}
+{/* Share audit link */}
+<div className="mb-6">
+  <button
+    onClick={generateShareLink}
+    className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent transition-colors"
+  >
+    Generate Shareable Audit Link
+  </button>
 
+  {shareLink && (
+    <div className="mt-3 p-3 border rounded bg-muted/50 text-sm break-all">
+      <div className="font-semibold mb-1">Share this link:</div>
+      <div>{shareLink}</div>
+
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(shareLink);
+          alert("Copied to clipboard!");
+        }}
+        className="mt-2 px-3 py-1 border rounded hover:bg-accent"
+      >
+        Copy to clipboard
+      </button>
+    </div>
+  )}
+</div>
         {/* Audit Requirements */}
         <div className="space-y-4">
           {auditData.map((requirement) => (
