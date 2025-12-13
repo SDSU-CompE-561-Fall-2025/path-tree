@@ -70,7 +70,7 @@ async def login_json(
         value=access_token,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         httponly=True,
-        secure=False,  # True in production with HTTPS
+        secure=True,  # True in production with HTTPS
         samesite="lax",
         path="/",
     )
@@ -115,7 +115,7 @@ async def refresh_token(payload: RefreshRequest, response: Response):
         value=new_access_token,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         httponly=True,
-        secure=False,  # True with HTTPS
+        secure=True,  # True with HTTPS
         samesite="lax",
         path="/",
     )
