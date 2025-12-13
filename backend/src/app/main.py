@@ -14,7 +14,7 @@ logger = logging.getLogger("uvicorn")
 app = FastAPI(title=settings.app_name, version=settings.app_version)
 
 # CORS
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:3000", "courseplanner-pi.vercel.app"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins or ["*"],
