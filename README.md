@@ -1,109 +1,151 @@
-# Course Planner API
+# Course Planner – Backend + Frontend (Docker Ready)
 
-FastAPI backend for a student degree planning tool. It exposes endpoints to manage programs, streams, degree plans, terms, and planned courses. The current implementation ships with **stub/in-memory repositories** so you can demo the API without a database. You can later switch the repositories to PostgreSQL without changing the HTTP routes.
-
----
-
-## Features
-
-- Auth stubs: `/auth/register`, `/auth/login`, `/auth/refresh`
-- Profile stub: `/students/me`
-- Catalog: `/programs`, `/programs/{id}`, `/programs/{id}/streams`, `/programs/{id}/requirements`
-- Planner: `/plans`, `/plans/{id}`, `/plans/{id}/terms`, `/plans/{id}/terms/{termId}/courses`
-- Audit + Collaboration stubs: `/plans/{id}/audit`, `/plans/{id}/share-links`
-- OpenAPI (Swagger) docs with examples for each request
+This project contains a **FastAPI backend** and a **Next.js frontend** for a complete Course Planner system.  
+The project now supports **Docker Compose**, automatic **database migrations**, and **data seeding** (courses, programs, terms).
 
 ---
 
-## Tech stack
+## 🚀 Project Overview
 
-- **Python** 3.11+  
-- **FastAPI** + Uvicorn  
-- Layered project structure (routes → services → repository → models)  
-- PostgreSQL 
+### **Backend (FastAPI)**
+- Authentication (cookie-based)
+- Programs, Courses, Plans, Terms
+- Automatic seeding of:
+  - COMPE courses
+  - General education courses (CS, MATH, PHYS, ENG, CHEM, BIO)
+  - COMPE program
+- PostgreSQL database
+- Dockerized using Uvicorn + Python 3.11
+
+### **Frontend (Next.js 16)**
+- Full Course Planner UI
+- Classes manager (add/remove completions)
+- Program of Study audit
+- Academic plans
+- Cookie-based auth
+- Dockerized for production
 
 ---
 
-## Project layout
+## 📁 Project Structure
 
 ```
 backend/
-├── pyproject.toml
-├── README.md
-├── .env.example
-└── src/app/
-    ├── main.py
-    ├── api/v1/router.py
-    ├── core/
-    │   ├── settings.py
-    │   ├── database.py
-    │   ├── auth.py
-    │   └── dependencies.py
-    ├── models/
-    │   ├── account.py
-    │   ├── program.py
-    │   ├── plan.py
-    │   └── course.py
-    ├── repository/
-    │   ├── account.py
-    │   ├── program.py
-    │   └── plan.py
-    ├── routes/
-    │   ├── auth.py
-    │   ├── programs.py
-    │   ├── plans.py
-    │   └── status.py
-    ├── schemas/
-    │   ├── account.py
-    │   ├── program.py
-    │   ├── plan.py
-    │   ├── course.py
-    │   └── token.py
-    ├── services
-    │   ├── account.py
-    │   ├── program.py
-    │   ├── plan.py
+  src/app/
+    main.py
+    models/
+    routes/
+    repository/
+    services/
+    core/
+    seed.py
+frontend/
+  src/app/
+  src/components/
+  src/lib/
+```  
+
+---
+
+## 🐳 Running Everything With Docker
+
+This is now the **only recommended way** to run the full stack locally.
+
+### 1️⃣ Install Docker
+Download Docker Desktop for macOS:  
+https://www.docker.com/products/docker-desktop/
+
+### 2️⃣ Ensure your backend `.env` values are correct
+`backend/.env` should contain **local Postgres credentials** for Docker Compose:
+
+```
+DATABASE_URL=postgresql+asyncpg://postgres:1234@db:5432/course_planner
+SECRET_KEY=supersecret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+### 3️⃣ Run everything
+From the **project root (`path-tree/`)**:
+
+```
+docker compose build
+docker compose up
+```
+
+This starts:
+- **Postgres** container
+- **FastAPI backend** (`http://localhost:8000`)
+- **Next.js frontend** (`http://localhost:3000`)
+
+---
+
+## 🛢 Database & Seeding
+
+The backend automatically seeds:
+- Global terms (FA24, SP25, SU25, FA25, SP26)
+- COMPE program
+- COMPE courses
+- General CS/MATH/PHYS/ENG/CHEM/BIO courses
+
+### To inspect DB manually:
+
+```
+docker compose exec db psql -U postgres -d course_planner
+```
+
+List tables:
+```
+\dt
+```
+
+View data:
+```
+SELECT * FROM courses;
+SELECT * FROM terms;
+SELECT * FROM programs;
 ```
 
 ---
 
-## Getting started
+## 🧪 Running Backend Locally (without Docker)
+If you need to run FastAPI manually:
 
-### 1) Create & activate a virtualenv
-```bash
-python -m venv .venv
-# Windows
-. .venv/Scripts/activate
-# macOS/Linux
-source .venv/bin/activate
 ```
-
-### 2) Install dependencies
-If you have a `requirements.txt`, do:
-```bash
+cd backend
 pip install -r requirements.txt
-```
-If not, install the basics:
-```bash
-pip install fastapi uvicorn[standard] pydantic-settings
-```
-### 3) Configure the .env
-```bash
-Make sure the .env has the the correct username and password as your postgres.
-And you need to create a database named course_planner
-```
-### 4) Run the API
-```bash
-python -m uvicorn app.main:app --reload --app-dir backend/src
+python3 -m uvicorn src.app.main:app --reload
 ```
 
-Open the docs: <http://localhost:8000/docs>  
-OpenAPI JSON: <http://localhost:8000/openapi.json>
+Open Swagger:  
+http://localhost:8000/docs
 
 ---
+
+## 🧪 Running Frontend Locally (without Docker)
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Open:  
+http://localhost:3000
+
+---
+
+## ❗ Notes
+- Docker is required for consistent Postgres + backend startup.
+- No manual DB inserts are required; all seed data is generated automatically.
+- When schema changes, reset docker DB volume:
+
+```
+docker compose down
+docker volume rm path-tree_db_data
+```
 
 
 
 ## License
-
-Personal/academic use
+Personal / Academic use
