@@ -4,6 +4,8 @@ A full-stack web application that helps students plan their entire academic jour
 
 Built with a **FastAPI** backend and a **Next.js 16** frontend, containerized with Docker Compose for one-command local development.
 
+**Live:** [path-tree-five.vercel.app](https://path-tree-five.vercel.app)
+
 ---
 
 ## Features
@@ -43,36 +45,35 @@ Built with a **FastAPI** backend and a **Next.js 16** frontend, containerized wi
 
 ### Infrastructure
 - Docker + Docker Compose (Postgres + backend + frontend in one command)
-- Render (backend hosting)
-- Vercel (frontend hosting)
+- **Render** — backend API + PostgreSQL (production)
+- **Vercel** — frontend (production)
+- Next.js API proxy — all browser requests go through `/api/proxy/*` on Vercel, which forwards to Render server-side, keeping auth cookies same-origin
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────┐        ┌──────────────────────────────┐
-│   Next.js Frontend  │  HTTP  │       FastAPI Backend         │
-│   (Vercel / :3000)  │◄──────►│   (Render / :8000)           │
-│                     │        │                              │
-│  App Router pages   │        │  /api/v1/auth    (JWT)       │
-│  TypeScript types   │        │  /api/v1/plans   (CRUD)      │
-│  HttpOnly cookies   │        │  /api/v1/completions         │
-│  Auto token refresh │        │  /api/v1/programs            │
-└─────────────────────┘        │  /api/v1/courses             │
-                               │  /api/v1/terms               │
-                               └──────────┬───────────────────┘
-                                          │ asyncpg
-                                          ▼
-                               ┌──────────────────────┐
-                               │      PostgreSQL       │
-                               │  (Docker / Supabase)  │
-                               └──────────────────────┘
+                    Browser
+                       │
+                       ▼
+        ┌──────────────────────────┐
+        │   Next.js (Vercel)       │
+        │   path-tree-five.vercel  │
+        │                          │
+        │  /app pages              │
+        │  /api/proxy/[...path] ───┼──── server-side fetch ────►  FastAPI (Render)
+        │                          │                               path-tree.onrender.com
+        │  Cookie lives here ◄─────┼──── Set-Cookie forwarded ────
+        └──────────────────────────┘
+                                                                        │ asyncpg
+                                                                        ▼
+                                                               PostgreSQL (Render)
 ```
 
 The backend uses **repository pattern** — routes depend on repository classes, not raw DB sessions. Every request goes through an async SQLAlchemy session, keeping DB I/O non-blocking throughout.
 
-Auth flow: login sets an `HttpOnly; SameSite` cookie on the backend. The frontend never touches the raw JWT — it just sends `credentials: "include"` on every request. If a request returns 401, the frontend automatically attempts a refresh before retrying.
+**Auth flow:** Login sets an `HttpOnly` cookie via a Next.js API proxy route. The browser never talks to Render directly — all requests go through `/api/proxy/*` on Vercel, which forwards them server-side. This keeps the auth cookie same-origin (Vercel domain), bypassing cross-origin cookie restrictions entirely. If a request returns 401, the frontend automatically attempts a refresh token rotation before retrying.
 
 ---
 
@@ -151,25 +152,49 @@ Full interactive docs at `/docs` (Swagger UI) or `/redoc`.
 
 ## Deployment
 
-### Backend (Render)
+The app is live at **[path-tree-five.vercel.app](https://path-tree-five.vercel.app)**
 
-Set the following environment variables on your Render service:
+| Service | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | https://path-tree-five.vercel.app |
+| Backend API | Render | https://path-tree.onrender.com |
+| Database | Render PostgreSQL | internal to Render network |
+
+### Deploying your own instance
+
+#### 1. Backend on Render
+
+Create a **Web Service** pointing to the `/backend` directory with **Docker** runtime.
+
+Set these environment variables:
 
 ```
-ENVIRONMENT=production
-DATABASE_URL=postgresql+asyncpg://...
-SECRET_KEY=...
-REFRESH_SECRET_KEY=...
-CORS_ORIGINS=https://your-vercel-app.vercel.app
+DATABASE_URL        = postgresql+asyncpg://<render-db-url>
+SECRET_KEY          = <random hex string>
+REFRESH_SECRET_KEY  = <different random hex string>
+ENVIRONMENT         = production
+CORS_ORIGINS        = https://your-app.vercel.app
+ALGORITHM           = HS256
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS   = 30
 ```
 
-### Frontend (Vercel)
+Generate secrets with:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
-Set in Vercel project settings:
+#### 2. Frontend on Vercel
+
+Import the repo, set **Root Directory** to `frontend`, and add:
 
 ```
-NEXT_PUBLIC_API_BASE_URL=https://your-render-backend.onrender.com
+NEXT_PUBLIC_API_BASE_URL = https://your-render-backend.onrender.com
 ```
+
+> **Note:** The frontend proxies all API calls through `/api/proxy/*` (a Next.js Route Handler) to the backend. This keeps auth cookies same-origin and avoids all cross-origin browser restrictions. You do not need to configure CORS for the frontend — only `CORS_ORIGINS` on the backend matters.
+
+> **Note:** Render free tier spins down after inactivity. First request after sleep takes ~30s. Consider upgrading or using an uptime monitoring service to keep it warm.
 
 ---
 
@@ -190,6 +215,7 @@ backend/
 frontend/
   src/
     app/                   # Next.js App Router pages
+      api/proxy/[...path]/ # Server-side proxy to Render backend
       (auth)/              # Login & register
       profile/             # Plan management
       classes/             # Course completion manager
