@@ -44,8 +44,8 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
 @router.post("/login-json", response_model=Token)
 async def login_json(
     payload: LoginRequest,
-    db: AsyncSession = Depends(get_db),
     response: Response,
+    db: AsyncSession = Depends(get_db),
 ):
     repo = AccountRepository(db)
     user = await repo.authenticate(payload.email, payload.password)
