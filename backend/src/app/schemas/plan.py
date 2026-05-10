@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 
 
 class PlanCreate(BaseModel):
@@ -16,6 +17,8 @@ class PlanOut(BaseModel):
     owner_email: str
     name: str
     program_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
 
 class PlanTermCreate(BaseModel):

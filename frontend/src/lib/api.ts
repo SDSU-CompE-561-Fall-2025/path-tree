@@ -2,25 +2,43 @@ import {
   getRefreshToken,
   setTokens,
   clearAuth,
-  type TokenPair,
 } from "./auth";
 
 import type { Program, Stream, ProgramRequirement } from '@/types/program';
-type MeResponse = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  email_verified: boolean;
-  created_at: string;
-};
+import type { MeResponse, TokenPair } from '@/types/account';
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 async function refreshAccessToken(): Promise<TokenPair | null> {
-  // Temporarily disable refresh-based re-login to avoid automatic login after logout
-  clearAuth();
-  return null;
+  try {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      clearAuth();
+      return null;
+    }
+
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!res.ok) {
+      clearAuth();
+      return null;
+    }
+
+    const tokens = (await res.json()) as TokenPair;
+    setTokens(tokens);
+    return tokens;
+  } catch (err) {
+    console.error("Token refresh failed:", err);
+    clearAuth();
+    return null;
+  }
 }
 async function apiFetch<T = unknown>(
   path: string,
@@ -245,8 +263,7 @@ share(planId: number) {
   },
 
   // Terms - academic terms
- // Terms - academic terms
-terms: {
+  terms: {
   list: () => {
     return apiFetch<any[]>('/terms');
   },

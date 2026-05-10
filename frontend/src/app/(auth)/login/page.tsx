@@ -5,16 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { API_BASE } from "@/lib/api";
-import { setTokens, setUserFirstName, type TokenPair } from "@/lib/auth";
-
-type AccountOut = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  email_verified: boolean;
-  created_at: string;
-};
+import { setTokens, setUserFirstName } from "@/lib/auth";
+import type { TokenPair, AccountOut } from "@/types/account";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

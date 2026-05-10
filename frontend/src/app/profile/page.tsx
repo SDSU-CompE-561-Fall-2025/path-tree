@@ -7,14 +7,7 @@ import { api } from "@/lib/api";
 import { CheckCircle, Clock, Calendar, BookOpen, FileText, Trash2 } from "lucide-react";
 import { clearAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-type MeResponse = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  email_verified: boolean;
-  created_at: string;
-};
+import type { MeResponse } from "@/types/account";
 
 export default function ProfilePage() {
   const [completions, setCompletions] = useState<any[]>([]);

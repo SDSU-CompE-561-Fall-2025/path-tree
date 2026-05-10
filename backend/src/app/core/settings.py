@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = Field(default="*", description="Comma-separated origins")
 
+    # Environment
+    environment: str = Field(default="development", description="deployment environment: development or production")
+
 
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432

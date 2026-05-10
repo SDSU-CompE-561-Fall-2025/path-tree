@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
 
 
 class AccountCreate(BaseModel):
@@ -13,5 +14,7 @@ class LoginRequest(BaseModel):
 
 
 class AccountOut(BaseModel):
+    id: int
     email: EmailStr
     name: str
+    created_at: datetime

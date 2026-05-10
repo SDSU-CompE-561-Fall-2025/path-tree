@@ -64,18 +64,19 @@ async def login_json(
         expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     )
 
+    is_production = settings.environment == "production"
     response.set_cookie(
         key="access_token",
         value=access_token,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         httponly=True,
-        secure=True,  # True in production with HTTPS
-        samesite="none",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         path="/",
     )
 
     return Token(
-        access_token="",  
+        access_token="",
         refresh_token=refresh_token,
         token_type="bearer",
     )
@@ -108,14 +109,14 @@ async def refresh_token(payload: RefreshRequest, response: Response):
         expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     )
 
-    # Reset the HttpOnly cookie
+    is_production = settings.environment == "production"
     response.set_cookie(
         key="access_token",
         value=new_access_token,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         httponly=True,
-        secure=True,  # True with HTTPS
-        samesite="none",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         path="/",
     )
 

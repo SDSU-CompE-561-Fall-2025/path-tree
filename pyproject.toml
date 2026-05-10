@@ -9,10 +9,24 @@ dependencies = [
   "pydantic>=2.8.0",
   "pydantic-settings>=2.4.0",
   "python-jose[cryptography]>=3.3.0",
-  "passlib[bcrypt]>=1.7.4",
+  "pwdlib[argon2]>=1.0.0",
   "sqlalchemy[asyncio]>=2.0.31",
   "asyncpg>=0.29.0",
-  "alembic>=1.13.2",  # optional; not required if using create_all
+  "alembic>=1.13.2",
+  "pydantic[email]>=2.8.0",
+  "python-multipart>=0.0.6",
+  "httpx>=0.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4.0",
+  "pytest-asyncio>=0.21.0",
+  "black>=23.0.0",
+  "isort>=5.12.0",
+  "flake8>=6.0.0",
+  "mypy>=1.7.0",
+  "pre-commit>=3.5.0",
 ]
 
 [tool.uvicorn]

@@ -4,6 +4,8 @@ import json
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.repository.plan import PlanRepository
+from app.repository.program import ProgramRepository
+from app.repository.completion import CompletionRepository
 from app.schemas.plan import (
     PlanCreate,
     PlanOut,
@@ -213,8 +215,7 @@ async def audit_plan(
     program_repo = ProgramRepository(db)
     completion_repo = CompletionRepository(db)
 
-    # This assumes PlanRepository has a get_plan method (it is used in PlanService)
-    plan = await plan_repo.get_plan(plan_id)  # type: ignore[attr-defined]
+    plan = await plan_repo.get(plan_id)
     if not plan or plan.owner_email != me.email:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
 

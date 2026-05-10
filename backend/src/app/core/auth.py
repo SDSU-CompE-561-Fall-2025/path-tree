@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -31,9 +31,9 @@ def create_access_token(data: dict, expires_delta: timedelta ) -> str:
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     #print(f"DEBUG create_access_token: Created token expiring at {expire} UTC")
@@ -117,9 +117,9 @@ def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=7)
+        expire = datetime.now(timezone.utc) + timedelta(days=7)
     to_encode.update({"exp": expire})
     # ✅ use REFRESH_SECRET_KEY here
     return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
