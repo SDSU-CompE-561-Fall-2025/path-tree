@@ -73,8 +73,12 @@ out/
 .env.test.local
 .env.production.local
 
-# Backend environment
+# Environment files — never commit these
 .env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
 
 # Yarn / PNPM / Bun
 yarn-error.log
