@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { API_BASE } from "@/lib/api";
 import { setTokens, setUserFirstName } from "@/lib/auth";
 import type { TokenPair, AccountOut } from "@/types/account";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const router = useRouter();
+  const { refresh } = useAuth();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,18 +41,10 @@ const tokens = (await res.json()) as TokenPair;
 // access_token is already in HttpOnly cookie, but you can keep refresh:
 setTokens(tokens); // now a no-op for access, but ok for refresh
 
-// Fetch /auth/me to get name
-const meRes = await fetch(`${API_BASE}/auth/me`, {
-  credentials: "include",
-});
-if (meRes.ok) {
-  const me = (await meRes.json()) as AccountOut;
-  const firstName = me.name?.split(" ")[0] || "Student";
-  setUserFirstName(firstName);
-}
+// Update global auth state — navbar updates instantly
+await refresh();
 
-// Hard navigation so the navbar reinitializes with the new cookie
-window.location.href = "/profile";
+router.replace("/profile");
     } catch (e: any) {
       setErr(e?.message ?? "Login failed");
     } finally {

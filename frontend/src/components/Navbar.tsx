@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcherButton } from "@/components/ThemeSwitcherButton";
 import {
@@ -12,8 +11,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-import { getUserFirstName, clearAuth } from "@/lib/auth";
-import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -24,38 +22,7 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [firstName, setFirstName] = useState<string | null>(null);
-  const [isAuthed, setIsAuthed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const checkAuth = async () => {
-      if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
-        setIsAuthed(false);
-        setFirstName(null);
-        return;
-      }
-      try {
-        const me = await api.auth.me();
-        if (cancelled) return;
-        setIsAuthed(true);
-        const backendName = me.name?.split(" ")[0];
-        const stored = getUserFirstName();
-        setFirstName(backendName || stored || "Student");
-      } catch {
-        if (cancelled) return;
-        setIsAuthed(false);
-        setFirstName(null);
-      }
-    };
-
-    checkAuth();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const { isAuthed, firstName, logout } = useAuth();
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -63,16 +30,8 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    try {
-      await api.auth.logout();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    } finally {
-      clearAuth();
-      setIsAuthed(false);
-      setFirstName(null);
-      router.replace("/login");
-    }
+    await logout();
+    router.replace("/login");
   };
 
   return (
