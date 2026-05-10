@@ -26,34 +26,18 @@ export default function Navbar() {
   const router = useRouter();
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isAuthed, setIsAuthed] = useState(false);
-  const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const checkAuth = async () => {
-      if (hasLoggedOut) {
-        setIsAuthed(false);
-        setFirstName(null);
-        return;
-      }
-
-      if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
-        setIsAuthed(false);
-        setFirstName(null);
-        return;
-      }
-
       try {
         const me = await api.auth.me();
-
         if (cancelled) return;
-
         setIsAuthed(true);
-
-        const stored = getUserFirstName();
         const backendName = me.name?.split(" ")[0];
-        setFirstName(stored || backendName || "Student");
+        const stored = getUserFirstName();
+        setFirstName(backendName || stored || "Student");
       } catch {
         if (cancelled) return;
         setIsAuthed(false);
@@ -66,7 +50,7 @@ export default function Navbar() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, hasLoggedOut]);
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -82,7 +66,6 @@ export default function Navbar() {
       clearAuth();
       setIsAuthed(false);
       setFirstName(null);
-      setHasLoggedOut(true);
       router.replace("/login");
     }
   };
